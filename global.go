@@ -7,14 +7,14 @@ import (
 
 var rootLoggerFactory = NewFactory(nil)
 
-func SetRootLoggerFactory(factory *Factory) {
+func SetRootFactory(factory *Factory) {
 	rootLoggerFactory = factory
 }
 
-func GetContextLogger(ctx context.Context) *slog.Logger {
-	return rootLoggerFactory.GetContextLogger(ctx)
+func GetLogger(ctx context.Context) *slog.Logger {
+	return rootLoggerFactory.GetLogger(ctx)
 }
 
-func AddAttributesToContextLogger(ctx context.Context, fields ...any) context.Context {
-	return rootLoggerFactory.AddAttributesToContextLogger(ctx, fields...)
+func AddAttributesToLogger(ctx context.Context, fields ...any) context.Context {
+	return rootLoggerFactory.AddAttributesToLogger(ctx, fields...)
 }

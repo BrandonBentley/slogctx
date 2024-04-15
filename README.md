@@ -53,11 +53,11 @@ func main() {
 
 	factory := slogctx.NewFactory(logger)
 
-	slogctx.SetRootLoggerFactory(factory)
+	slogctx.SetRootFactory(factory)
 
 	ctx := context.Background()
 
-	slogctx.GetContextLogger(ctx).Info(
+	slogctx.GetLogger(ctx).Info(
 		"here is a info message from the root factory",
 	)
 }
@@ -82,7 +82,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	slogctx.GetContextLogger(ctx).Info(
+	slogctx.GetLogger(ctx).Info(
 		"here is a info message from the default root factory",
 	)
 }

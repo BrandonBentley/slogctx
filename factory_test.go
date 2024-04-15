@@ -17,26 +17,26 @@ func TestGlobalFactory(t *testing.T) {
 
 	ctx := context.Background()
 	defaultLogger := slog.Default()
-	assert.Equal(t, defaultLogger, GetContextLogger(ctx))
+	assert.Equal(t, defaultLogger, GetLogger(ctx))
 
 	newDefaultLogger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(newDefaultLogger)
-	assert.Equal(t, newDefaultLogger, GetContextLogger(ctx))
+	assert.Equal(t, newDefaultLogger, GetLogger(ctx))
 
 	newLogger := slog.New(slog.NewJSONHandler(buf, nil))
-	SetRootLoggerFactory(NewFactory(newLogger))
+	SetRootFactory(NewFactory(newLogger))
 	slog.SetDefault(newLogger)
-	assert.Equal(t, newLogger, GetContextLogger(ctx))
+	assert.Equal(t, newLogger, GetLogger(ctx))
 
-	ctx2 := AddAttributesToContextLogger(ctx,
+	ctx2 := AddAttributesToLogger(ctx,
 		"key1", "value1",
 		slog.Bool("bool1", true),
 	)
 
-	assert.Equal(t, newLogger, GetContextLogger(ctx))
-	assert.NotEqual(t, newLogger, GetContextLogger(ctx2))
+	assert.Equal(t, newLogger, GetLogger(ctx))
+	assert.NotEqual(t, newLogger, GetLogger(ctx2))
 
-	GetContextLogger(ctx).Info(
+	GetLogger(ctx).Info(
 		"a message",
 	)
 
@@ -54,7 +54,7 @@ func TestGlobalFactory(t *testing.T) {
 	assert.Equal(t, "", testStruct.Key1)
 	assert.False(t, testStruct.Bool1)
 
-	GetContextLogger(ctx2).Info(
+	GetLogger(ctx2).Info(
 		"a ctx2 message",
 	)
 
@@ -74,12 +74,12 @@ func TestImpossibleError(t *testing.T) {
 	newLogger := slog.New(slog.NewJSONHandler(buf, nil))
 	f := NewFactory(newLogger)
 
-	defaultLogger := f.GetContextLogger(context.Background())
+	defaultLogger := f.GetLogger(context.Background())
 
 	assert.NotNil(t, defaultLogger)
 
 	ctx := context.WithValue(context.Background(), loggerContextKey, true)
-	actualLogger := f.GetContextLogger(ctx)
+	actualLogger := f.GetLogger(ctx)
 
 	assert.Equal(t, defaultLogger, actualLogger)
 

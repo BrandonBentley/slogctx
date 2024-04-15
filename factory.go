@@ -27,11 +27,11 @@ func NewFactoryNoOp() *Factory {
 	}
 }
 
-func (f *Factory) GetContextLogger(ctx context.Context) *slog.Logger {
+func (f *Factory) GetLogger(ctx context.Context) *slog.Logger {
 	return f.getLoggerFromContext(ctx)
 }
 
-func (f *Factory) AddAttributesToContextLogger(ctx context.Context, attrs ...any) context.Context {
+func (f *Factory) AddAttributesToLogger(ctx context.Context, attrs ...any) context.Context {
 	return context.WithValue(ctx, loggerContextKey, f.getLoggerFromContext(ctx).With(attrs...))
 }
 
