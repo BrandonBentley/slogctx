@@ -23,7 +23,7 @@ func main() {
 
 	ctx := context.Background()
 
-	factory.GetContextLogger(ctx).Info(
+	factory.GetLogger(ctx).Info(
 		"here is a info message",
 	)
 }
