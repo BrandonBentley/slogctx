@@ -12,12 +12,39 @@ type attrSet struct {
 // higher index values with matching attr.Key will
 // override the previous values.
 // ex: attrs[0][*].Key == attrs[1][*].Key { value = attrs[1][*] }
-func newAttrSet(attrs ...[]slog.Attr) attrSet {
+func newAttrSet(attrs ...[]slog.Attr) *attrSet {
 	if len(attrs) == 0 {
-		return attrSet{}
+		return &defaultEmptyAttrSet
+	} else if len(attrs) > 1 {
+		return newAttrSetMultipleSlices(attrs...)
 	}
+
+	a := &attrSet{
+		attrSlice: make([]slog.Attr, len(attrs[0])),
+		attrMap:   make(map[string]int, len(attrs[0])),
+	}
+	i := 0
+	for _, attr := range attrs[0] {
+		if index, ok := a.attrMap[attr.Key]; ok {
+			a.attrSlice[index] = attr
+			continue
+		}
+		a.attrSlice[i] = attr
+		a.attrMap[attr.Key] = i
+		i++
+	}
+	if i < len(a.attrSlice) {
+		a.attrSlice = a.attrSlice[:i]
+	}
+	return a
+}
+
+// higher index values with matching attr.Key will
+// override the previous values.
+// ex: attrs[0][*].Key == attrs[1][*].Key { value = attrs[1][*] }
+func newAttrSetMultipleSlices(attrs ...[]slog.Attr) *attrSet {
 	minLength := minLen(attrs)
-	a := attrSet{
+	a := &attrSet{
 		attrSlice: make([]slog.Attr, minLength),
 		attrMap:   make(map[string]int, minLength),
 	}
@@ -37,11 +64,14 @@ func newAttrSet(attrs ...[]slog.Attr) attrSet {
 			i++
 		}
 	}
+	if i < len(a.attrSlice) {
+		a.attrSlice = a.attrSlice[:i]
+	}
 	return a
 }
 
-func (a attrSet) newRecord(r slog.Record) slog.Record {
-	if r.NumAttrs() > 0 {
+func (a *attrSet) newRecord(r slog.Record) slog.Record {
+	if r.NumAttrs() == 0 {
 		r.AddAttrs(a.attrSlice...)
 		return r
 	}
@@ -63,17 +93,17 @@ func (a attrSet) newRecord(r slog.Record) slog.Record {
 	return rr
 }
 
-func (a attrSet) with(attrs []slog.Attr) attrSet {
+func (a *attrSet) with(attrs []slog.Attr) *attrSet {
 	if a.attrMap == nil {
 		return newAttrSet(attrs)
 	}
 	newAttrSet := a.copy()
-	(&newAttrSet).setNewAttrs(attrs)
+	newAttrSet.setNewAttrs(attrs)
 	return newAttrSet
 }
 
-func (a attrSet) copy() attrSet {
-	newSet := attrSet{
+func (a *attrSet) copy() *attrSet {
+	newSet := &attrSet{
 		attrSlice: make([]slog.Attr, len(a.attrSlice)),
 		attrMap:   make(map[string]int, len(a.attrMap)),
 	}
@@ -101,9 +131,6 @@ func (a *attrSet) setNewAttrs(attrs []slog.Attr) {
 }
 
 func minLen(attrs [][]slog.Attr) int {
-	if len(attrs) == 0 {
-		return 0
-	}
 	length := len(attrs[0])
 	for _, attrSlice := range attrs[1:] {
 		if len(attrSlice) > length {

@@ -2,20 +2,38 @@ package slogctx
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
+	"os"
 )
 
 type uniqueContextAttrsKey string
 
 const attrSetContextKey = uniqueContextAttrsKey("context-logger-attr-set")
 
-func getAttrSetFromContext(ctx context.Context) attrSet {
+var defaultEmptyAttrSet = attrSet{}
+
+func getAttrSetFromContext(ctx context.Context) (as *attrSet) {
 	val := ctx.Value(attrSetContextKey)
 	if val == nil {
-		return newAttrSet()
+		return &defaultEmptyAttrSet
 	}
-	as, ok := val.(attrSet)
-	if !ok {
-		return newAttrSet()
-	}
-	return as
+
+	defer func() {
+		if recover() != nil {
+			as = &defaultEmptyAttrSet
+			freshStdoutLogger().Error(
+				"slogctx context key has been overwritten with incorrect type",
+				slog.String("type", fmt.Sprintf("%T", val)),
+			)
+		}
+	}()
+
+	return val.(*attrSet)
+}
+
+func freshStdoutLogger() *slog.Logger {
+	return slog.New(
+		slog.NewJSONHandler(os.Stdout, nil),
+	)
 }
