@@ -92,7 +92,7 @@ Output
 
 ### No More Duplicates!
 
-A significant update: `slogctx.ContextHandler` will now remove duplicate keys, keeping the last provided value, and maintains the order in which keys where added
+A significant update: `slogctx.ContextHandler` will now remove duplicate keys, keeping the last provided value
 
 ```go
 package main
