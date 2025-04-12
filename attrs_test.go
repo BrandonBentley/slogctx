@@ -1,6 +1,7 @@
 package slogctx
 
 import (
+	"context"
 	"log/slog"
 	"testing"
 
@@ -8,87 +9,29 @@ import (
 )
 
 func TestNewAttrSet_Empty(t *testing.T) {
-	assert.Equal(t, &defaultEmptyAttrSet, newAttrSet())
+	as := newAttrSet()
+	assert.Len(t, as.attrMap, 0)
+	assert.NotNil(t, as.attrMap)
 }
 
-func TestNewAttrSet_Single(t *testing.T) {
+func TestNewAttrSet(t *testing.T) {
 	set := []slog.Attr{
 		slog.String("k1", "v1"),
 		slog.String("k2", "v2"),
-		slog.String("k1", "v2"),
+		slog.Bool("k1", true),
 	}
-	as := newAttrSet(set)
-	assert.Len(t, as.attrSlice, 2)
+	as := newAttrSet(set...)
 	assert.Len(t, as.attrMap, 2)
-	assertNoEmptiesAndUniquenessInAttrSet(t, as)
+	assert.True(t, as.attrMap["k1"].Value.Bool())
+	assert.Equal(t, "v2", as.attrMap["k2"].Value.String())
 }
 
-func TestNewAttrSet_Multiple(t *testing.T) {
-	attrsSlices := [][]slog.Attr{
-		{
-			slog.String("k1", "v1"),
-			slog.String("k2", "v2"),
-			slog.String("k1", "v1.5"),
-			slog.String("k3", "v3"),
-		},
-		{
-			slog.String("k1", "v1"),
-			slog.String("k2", "v2"),
-		},
-	}
-	as := newAttrSet(attrsSlices...)
-	assert.Len(t, as.attrSlice, 3)
-	assert.Len(t, as.attrMap, 3)
-	assertNoEmptiesAndUniquenessInAttrSet(t, as)
-}
+func TestGetAttrSetFromContext_Panic(t *testing.T) {
+	ctx := context.WithValue(
+		context.Background(),
+		attrSetContextKey,
+		"InvalidValue",
+	)
 
-func TestNewAttrSet_Multiple_AppendingRequired(t *testing.T) {
-	attrsSlices := [][]slog.Attr{
-		{
-			slog.String("k1", "v1"),
-		},
-		{
-			slog.String("k2", "v2"),
-			slog.String("k3", "v3"),
-		},
-		{
-			slog.String("k4", "v4"),
-		},
-	}
-	as := newAttrSet(attrsSlices...)
-	assert.Len(t, as.attrSlice, 4)
-	assert.Len(t, as.attrMap, 4)
-	assertNoEmptiesAndUniquenessInAttrSet(t, as)
-}
-
-func TestNewRecord(t *testing.T) {
-	set := []slog.Attr{
-		slog.String("k1", "v1"),
-		slog.String("k2", "v2"),
-		slog.String("k1", "v2"),
-	}
-	as := newAttrSet(set)
-	assertNoEmptiesAndUniquenessInAttrSet(t, as)
-}
-
-func assertNoEmptiesAndUniquenessInAttrSet(t *testing.T, as *attrSet) {
-	duplicateKeysMap := map[string]bool{}
-	for _, a := range as.attrSlice {
-		assert.NotEmpty(t, a.Value)
-		assert.NotEmpty(t, a.Key)
-		found := duplicateKeysMap[a.Key]
-		if found {
-			t.Fatal("duplicate keys in slice", as.attrSlice, as.attrMap)
-		}
-		duplicateKeysMap[a.Key] = true
-	}
-	duplicateValuesMap := map[int]bool{}
-	for k, index := range as.attrMap {
-		assert.NotEmpty(t, k)
-		found := duplicateValuesMap[index]
-		if found {
-			t.Fatal("duplicate indexes in map", as.attrSlice, as.attrMap)
-		}
-		duplicateValuesMap[index] = true
-	}
+	assert.Len(t, getAttrSetFromContext(ctx).attrMap, 0)
 }

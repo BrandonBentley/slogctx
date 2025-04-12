@@ -11,7 +11,7 @@ import (
 // for example slog.InfoContext(ctx, msg, ...args)
 func WithAttrs(ctx context.Context, attrs ...slog.Attr) context.Context {
 	as := getAttrSetFromContext(ctx)
-	return context.WithValue(ctx, attrSetContextKey, as.with(attrs))
+	return context.WithValue(ctx, attrSetContextKey, as.copyWith(attrs...))
 }
 
 // With is used to add values to the context for logging purposes

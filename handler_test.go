@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"strings"
 	"testing"
+	"testing/slogtest"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -78,4 +79,21 @@ func TestContextHandler(t *testing.T) {
 	assert.Equal(t, "difVal", group1["someKey"])
 	assert.Equal(t, "this", group1["dontChange"])
 	assert.Equal(t, "value", group1["key"])
+}
+
+func TestSlogTest(t *testing.T) {
+	bldr := &strings.Builder{}
+	assert.NoError(t,
+		slogtest.TestHandler(
+			NewJSONContextHandler(bldr, nil),
+			func() []map[string]any {
+				arrStr := strings.ReplaceAll(bldr.String(), "\n", ",")
+				arrStr = "[" + arrStr[:len(arrStr)-1] + "]"
+				var m []map[string]any
+				json.Unmarshal([]byte(arrStr), &m)
+
+				return m
+			},
+		),
+	)
 }

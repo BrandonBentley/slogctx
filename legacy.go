@@ -9,7 +9,7 @@ import (
 // It is recommended to use slog context functions instead
 // ex slog.InfoContext(ctx, msg, ...args)
 func GetLogger(ctx context.Context) *slog.Logger {
-	return slog.New(getDefultLogger().Handler().WithAttrs(getAttrSetFromContext(ctx).attrSlice))
+	return slog.New(getDefultLogger().Handler().WithAttrs(getAttrSetFromContext(ctx).attrs()))
 }
 
 // AddAttributesToLogger is now an alias for With
